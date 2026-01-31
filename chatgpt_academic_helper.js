@@ -2,13 +2,14 @@
 // ==UserScript==
 // @name          ChatGPT-academic-prompt-helper
 // @namespace     https://github.com/ZinYY/chatgpt-academic-prompt-helper
-// @version       0.1.8
-// @description   项目主页：https://github.com/ZinYY/chatgpt-academic-prompt-helper。  【ChatGPT 学术小助手】可以为你带来更好的网页版chatgpt使用体验：快速地添加快捷指令prompts。  本项目是一个油猴脚本 (Tampermonkey)，旨在便于网页版 Chatgpt 的 prompt 输入，并内置了一些常用的学术 prompt 模板。  【Usage】【打开 prompt 面板】:单击侧边栏的 “快捷指令” 按钮，或者用快捷键 `command+shift+F` (Windows 用户使用 `ctrl+shift+F`)。  【输入 prompt】: 单击想要输入的 prompt 即可。prompt 会添加在输入框之前。  【关闭 prompt 面板】: 使用快捷键 `command+shift+F`, 或是按下 `ESC` 按键即可。  【自定义 prompt】: 自行修改 `chatgpt_academic_helper.js` 文件中的内容即可。
+// @version       0.1.8-fix1
+// @description   Fix: inject CSS (no Tailwind on ChatGPT), correct close/isOpen logic, prevent page layout shifting
 // @homepage      https://github.com/ZinYY/chatgpt-academic-prompt-helper
 // @author        ZinYY
 // @match         *://chat.openai.com/*
 // @match         *://chatgpt.com/*
 // @match         *://claude.ai/*
+// @match         *://gemini.google.com/*
 // @grant         none
 // @license MIT
 // ==/UserScript==
@@ -18,6 +19,104 @@
     if (document.querySelector("#chatgptHelper")) {
         return;
     }
+
+    // ============ FIX 1: Inject CSS (ChatGPT page doesn't include Tailwind) ============
+    const style = document.createElement("style");
+    style.textContent = `
+#chatgptHelper { all: initial; } /* isolate from page styles (optional but helpful) */
+#chatgptHelper, #chatgptHelper * { box-sizing: border-box; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; }
+
+#chatgptHelperOpen{
+  position: fixed;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  z-index: 999999;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.2);
+  user-select: none;
+  line-height: 1.1;
+}
+#chatgptHelperOpen:hover{ background:#374151; }
+
+#chatgptHelperMain{
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 384px; /* w-96 */
+  z-index: 999998;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  color: #f3f4f6;
+  background: #111827;
+  transform: translateX(100%);
+  transition: transform .2s ease;
+}
+
+#chatgptHelperHeader{
+  padding: 14px 6px;
+}
+#chatgptHelperHeader a{ color:#93c5fd; text-decoration:none; }
+#chatgptHelperHeader a:hover{ text-decoration:underline; }
+
+#chatgptHelperList{
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255,255,255,.2);
+  border-bottom: 1px solid rgba(255,255,255,.2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  list-style: none;
+}
+#chatgptHelperList li{
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: rgba(255,255,255,.06);
+  font-size: 13px;
+  line-height: 1.3;
+  user-select: none;
+}
+#chatgptHelperList li:hover{ background: rgba(255,255,255,.14); }
+
+#chatgptHelperFooter{
+  display:flex;
+  align-items:center;
+  padding: 12px 0;
+  gap: 8px;
+}
+#chatgptHelperClose{
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: rgba(255,255,255,.06);
+  user-select: none;
+}
+#chatgptHelperClose:hover{ background: rgba(255,255,255,.14); }
+
+#chatgptHelperDonate{
+  margin-left: auto;
+  font-size: 13px;
+}
+#chatgptHelperDonate a{
+  color:#93c5fd;
+  text-decoration:none;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+#chatgptHelperDonate a:hover{ background: rgba(255,255,255,.10); }
+`;
+    document.head.appendChild(style);
+
     var SHORTCUTS = [
         [
             "🀄️⇨🔠 中译英 (列出参考)",
@@ -52,10 +151,6 @@
             "🔍 查找语法错误",
             "Can you help me ensure that the grammar and the spelling is correct? Do not try to polish the text, if no mistake is found, tell me that this paragraph is good. If you find grammar or spelling mistakes, please list mistakes you find in a two-column markdown table, put the original text the first column, put the corrected text in the second column and highlight the key words you fixed.\nExample:\nParagraph: How is you? Do you knows what is it?\n| Original sentence | Corrected sentence |\n| :--- | :--- |\n| How **is** you? | How **are** you? |\n| Do you **knows** what **is** **it**? | Do you **know** what **it** **is** ? |\nBelow is a paragraph from an academic paper. You need to report all grammar and spelling mistakes as the example before and explain how to correct them:\n",
         ],
-        // [
-        //     "🔍 查找语法错误 (short)",
-        //     "Below is a paragraph from an academic paper. Find all grammar mistakes, list mistakes in a two-column markdown table and explain how to correct them:\n",
-        // ],
         [
             "✍🏻 解释每步代码的作用",
             "I would like you to serve as a code interpreter with Chinese, and elucidate the syntax and the semantics of the code line-by-line:\n",
@@ -137,118 +232,147 @@
             "我想让你充当书面作品的标题生成器。我会给你提供一篇文章的主题和关键词，你会生成五个吸引眼球的标题。请保持标题简洁，不超过 20 个字，并确保保持意思。回复将使用主题的语言类型。我的第一个主题是“LearnData，一个建立在 VuePress 上的知识库，里面整合了我所有的笔记和文章，方便我使用和分享。”",
         ],
     ];
+
     var rootEle = document.createElement("div");
     rootEle.id = "chatgptHelper";
+
+    // ============ FIX 2: Use our own ids and avoid Tailwind-only classes ============
     rootEle.innerHTML =
-        '<div id="chatgptHelperOpen" class="fixed top-1/2 right-1 z-50 p-3 rounded-md transition-colors duration-200 text-white cursor-pointer border border-white/20 bg-gray-900 hover:bg-gray-700 -translate-y-1/2">\u5b66<br>\u672f<br>\u52a9<br>\u624b</div><div id="chatgptHelperMain" class="fixed top-0 right-0 bottom-0 z-50 flex flex-col px-3 w-96 text-gray-100 bg-gray-900" style="transform: translateX(100%); transition: transform 0.2s;"><div class="py-4 pl-3"><a href="https://github.com/ZinYY/chatgpt-academic-prompt-helper" target="_blank">ChatGPT Academic Helper (ctrl+shift+F)</a></div><ul class="flex flex-1 overflow-y-auto py-4 border-y border-white/20 text-sm" style="flex-wrap: wrap">'.concat(
-            SHORTCUTS.map(function (_a) {
-                var label = _a[0],
-                    value = _a[1];
-                return '<li class="mr-2 mb-2 py-1 px-3 rounded-md hover:bg-gray-700 cursor-pointer" data-value="'
-                    .concat(encodeURI(value), '">')
-                    .concat(label, "</li>");
-            }).join(""),
-            '</ul><div class="flex items-center py-4"><div id="chatgptHelperClose" class="py-2 px-3 rounded-md cursor-pointer hover:bg-gray-700">\u5173\u95ED</div><div class="flex-1 pr-3 text-right text-sm"><a class="py-2 px-3 rounded-md hover:bg-gray-700" href="https://github.com/ZinYY/chatgpt-academic-prompt-helper/blob/main/figs/pic_receive.jpg?raw=true" target="_blank">\u7292\u52B3\u4F5C\u8005</a></div></div></div></div>'
-        );
-    rootEle.querySelector("ul").addEventListener("click", function (event) {
-        var target = event.target;
-        if (target.nodeName === "LI") {
-            var value = target.getAttribute("data-value");
-            if (value) {
-                var textareaEle_1;
-                if (window.location.hostname === "claude.ai") {
-                    // Claude.ai 的输入框
-                    textareaEle_1 = document.querySelector(
-                        "div[contenteditable='true']"
-                    );
-                } else {
-                    // ChatGPT 的输入框
-                    textareaEle_1 = document.querySelector("#prompt-textarea");
-                }
+        '<div id="chatgptHelperOpen">学<br>术<br>助<br>手</div>' +
+        '<div id="chatgptHelperMain">' +
+        '  <div id="chatgptHelperHeader">' +
+        '    <a href="https://github.com/ZinYY/chatgpt-academic-prompt-helper" target="_blank">ChatGPT Academic Helper (ctrl+shift+F)</a>' +
+        '  </div>' +
+        '  <ul id="chatgptHelperList">' +
+        SHORTCUTS.map(function (_a) {
+            var label = _a[0],
+                value = _a[1];
+            return (
+                '<li data-value="' +
+                encodeURI(value) +
+                '">' +
+                label +
+                "</li>"
+            );
+        }).join("") +
+        "  </ul>" +
+        '  <div id="chatgptHelperFooter">' +
+        '    <div id="chatgptHelperClose">关闭</div>' +
+        '    <div id="chatgptHelperDonate"><a href="https://github.com/ZinYY/chatgpt-academic-prompt-helper/blob/main/figs/pic_receive.jpg?raw=true" target="_blank">犒劳作者</a></div>' +
+        "  </div>" +
+        "</div>";
 
-                if (textareaEle_1) {
-                    if (window.location.hostname === "claude.ai") {
-                        // Claude.ai 使用 innerHTML
-                        textareaEle_1.innerHTML =
-                            decodeURI(value) + textareaEle_1.innerHTML;
-                        // 触发输入事件
-                        textareaEle_1.dispatchEvent(
-                            new InputEvent("input", {
-                                bubbles: true,
-                                cancelable: true,
-                            })
-                        );
-                    } else {
-                        // ChatGPT 使用 innerHTML 并处理换行
-                        textareaEle_1.innerHTML =
-                            decodeURI(value).replace(/\n/g, "<br>") +
-                            textareaEle_1.innerHTML;
-                        textareaEle_1.dispatchEvent(
-                            new Event("input", { bubbles: true })
-                        );
-                    }
-
-                    setTimeout(function () {
-                        textareaEle_1.focus();
-                    }, 1e3);
-                }
-            }
-        }
-        chatgptHelperMain.style.transform = "translateX(100%)";
-        isOpen = false;
-    });
-    document.addEventListener("click", function (event) {
-        if (isOpen && !event.target.closest("#chatgptHelperOpen")) {
-            chatgptHelperMain.style.transform = "translateX(100%)";
-            isOpen = false;
-        }
-    });
     document.body.appendChild(rootEle);
+
     var chatgptHelperMain = document.querySelector("#chatgptHelperMain");
-    document
-        .querySelector("#chatgptHelperOpen")
-        .addEventListener("click", function () {
-            chatgptHelperMain.style.transform = "translateX(0)";
-            isOpen = true;
-        });
+    var isOpen = false;
+
     function openChatgptHelper() {
         chatgptHelperMain.style.transform = "translateX(0)";
         isOpen = true;
     }
-    var isOpen = false;
-    document.addEventListener("keydown", function (event) {
-        if (event.metaKey && event.shiftKey && event.code === "KeyF") {
-            if (!isOpen) {
-                openChatgptHelper();
-                isOpen = true;
-            } else {
-                // 执行另一个功能的代码
-                chatgptHelperMain.style.transform = "translateX(100%)";
-                isOpen = false;
-            }
-        }
+    function closeChatgptHelper() {
+        chatgptHelperMain.style.transform = "translateX(100%)";
+        isOpen = false;
+    }
+
+    // ============ FIX 3: Robust close/open behavior ============
+    // Toggle by clicking the open button
+    document
+        .querySelector("#chatgptHelperOpen")
+        .addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (!isOpen) openChatgptHelper();
+            else closeChatgptHelper();
+        });
+
+    // Prevent clicks inside panel from bubbling to document (which closes it)
+    chatgptHelperMain.addEventListener("click", function (e) {
+        e.stopPropagation();
     });
-    document.addEventListener("keydown", function (event) {
-        if (event.ctrlKey && event.shiftKey && event.code === "KeyF") {
-            if (!isOpen) {
-                openChatgptHelper();
-                isOpen = true;
-            } else {
-                // 执行另一个功能的代码
-                chatgptHelperMain.style.transform = "translateX(100%)";
-                isOpen = false;
-            }
-        }
+
+    // Click outside closes the panel
+    document.addEventListener("click", function () {
+        if (isOpen) closeChatgptHelper();
     });
+
+    // Close button
     document
         .querySelector("#chatgptHelperClose")
-        .addEventListener("click", function () {
-            chatgptHelperMain.style.transform = "translateX(100%)";
+        .addEventListener("click", function (e) {
+            e.stopPropagation();
+            closeChatgptHelper();
         });
+
+    // ============ Prompt insertion ============
+    document
+        .querySelector("#chatgptHelperList")
+        .addEventListener("click", function (event) {
+            var target = event.target;
+            if (target && target.nodeName === "LI") {
+                var value = target.getAttribute("data-value");
+                if (value) {
+                    var textareaEle;
+                    var hostname = window.location.hostname;
+                    if (hostname === "claude.ai") {
+                        // Claude.ai input
+                        textareaEle = document.querySelector(
+                            "div[contenteditable='true']"
+                        );
+                    } else if (hostname === "gemini.google.com") {
+                        // Gemini input
+                        textareaEle = document.querySelector(
+                            "rich-textarea div[contenteditable='true'], .ql-editor[contenteditable='true']"
+                        );
+                    } else {
+                        // ChatGPT input
+                        textareaEle = document.querySelector("#prompt-textarea");
+                    }
+
+                    if (textareaEle) {
+                        if (hostname === "claude.ai" || hostname === "gemini.google.com") {
+                            textareaEle.innerHTML =
+                                decodeURI(value) + textareaEle.innerHTML;
+                            textareaEle.dispatchEvent(
+                                new InputEvent("input", {
+                                    bubbles: true,
+                                    cancelable: true,
+                                })
+                            );
+                        } else {
+                            // ChatGPT contenteditable
+                            textareaEle.innerHTML =
+                                decodeURI(value).replace(/\n/g, "<br>") +
+                                textareaEle.innerHTML;
+                            textareaEle.dispatchEvent(
+                                new Event("input", { bubbles: true })
+                            );
+                        }
+
+                        setTimeout(function () {
+                            textareaEle.focus();
+                        }, 200);
+                    }
+                }
+                closeChatgptHelper();
+            }
+        });
+
+    // ============ Hotkeys ============
     document.addEventListener("keydown", function (event) {
-        if (event.code === "Escape") {
-            chatgptHelperMain.style.transform = "translateX(100%)";
-            isOpen = false;
+        // Mac: cmd+shift+F
+        if (event.metaKey && event.shiftKey && event.code === "KeyF") {
+            if (!isOpen) openChatgptHelper();
+            else closeChatgptHelper();
+        }
+        // Windows/Linux: ctrl+shift+F
+        if (event.ctrlKey && event.shiftKey && event.code === "KeyF") {
+            if (!isOpen) openChatgptHelper();
+            else closeChatgptHelper();
+        }
+        // ESC closes
+        if (event.code === "Escape" && isOpen) {
+            closeChatgptHelper();
         }
     });
 })();
