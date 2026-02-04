@@ -1,49 +1,78 @@
-# Chatgpt Academic Helper: ChatGPT 学术小助手 (ChatGPT Academic Prompt Helper)
+# ChatGPT Academic Prompt Helper (Multi-Platform)
 
-本项目是一个油猴脚本 (Tampermonkey)，旨在便于**网页版** Chatgpt 的 prompt 输入，并内置了一些常用的学术 prompt 模板。
+> 🚀 Enhanced fork with multi-platform and multi-browser support
 
-本项目根据 [ChatGPT 插件脚本](https://github.com/winchesHe/chatGPT-prompt-scripts)项目修改，主要自用。其中，学术 Prompt 内容借鉴了 [ChatGPT 学术化](https://github.com/binary-husky/chatgpt_academic)项目。
+A Tampermonkey/Greasemonkey userscript that provides quick access to academic prompts for ChatGPT, Claude.ai, and Gemini.
 
-![功能界面展示](figs/fig2.png)
+## ✨ Features
 
-<!-- <img src=figs/fig2.png alt="功能界面展示" width="500"> -->
+- 📝 Built-in academic prompt templates
+- 🌐 Multi-platform support: ChatGPT, Claude.ai, Gemini
+- 🔧 Multi-browser support: Chrome, Safari, Firefox, Edge
+- ⚡ Keyboard shortcuts (Cmd/Ctrl + Shift + F)
+- 🛡️ Stable DOM handling with MutationObserver
+- 🍎 Safari-specific optimizations
 
-## Install:
+## 🎯 Improvements Over Original
 
-### 方法 1：
+This is a fork of [ZinYY/chatgpt-academic-prompt-helper](https://github.com/ZinYY/chatgpt-academic-prompt-helper) with the following enhancements:
 
-去 Greasy Fork 安装脚本: [Install on GreasyFork](https://greasyfork.org/zh-CN/scripts/464480-chatgpt-academic-prompt-helper)
+- ✅ Added support for Claude.ai and Gemini
+- ✅ Fixed Safari compatibility issues
+- ✅ Improved DOM stability with MutationObserver
+- ✅ Enhanced cross-browser compatibility
+- ✅ Better error handling and recovery
 
-### 方法 2：
+## 📦 Installation
 
-将 `chatgpt_academic_helper.js` 文件下载下来，并拖入油猴脚本插件即可。
+### Method 1: Direct Install
+1. Install [Tampermonkey](https://www.tampermonkey.net/) or [Greasemonkey](https://www.greasespot.net/)
+2. Download `chatgpt_academic_helper.js`
+3. Drag and drop the file into your userscript manager
 
-或手动新建油猴脚本 并粘贴 `chatgpt_academic_helper.js` 的内容。
+### Method 2: Manual Install
+1. Install [Tampermonkey](https://www.tampermonkey.net/) or [Greasemonkey](https://www.greasespot.net/)
+2. Create a new userscript
+3. Copy and paste the contents of `chatgpt_academic_helper.js`
+4. Save
 
-## Usage:
+## 🎮 Usage
 
-### 打开 prompt 面板:
+### Open Prompt Panel
+- Click the "学术助手" button on the right side of the page
+- Or use keyboard shortcut: `Cmd+Shift+F` (Mac) / `Ctrl+Shift+F` (Windows/Linux)
 
-![功能界面展示](figs/fig1.png)
+### Insert Prompt
+- Click on any prompt template to insert it into the input field
 
-<!-- <img src=figs/fig1.png alt="快捷指令按钮位置" width="500"> -->
+### Close Panel
+- Press `Cmd+Shift+F` / `Ctrl+Shift+F` again
+- Press `ESC`
+- Click anywhere outside the panel
 
-单击侧边栏的 “快捷指令” 按钮，或者用快捷键 `command+shift+F` (Windows 用户使用 `ctrl+shift+F`)。
+### Customize Prompts
+Edit the `SHORTCUTS` array in `chatgpt_academic_helper.js` to add your own prompts.
 
-### 输入 prompt:
+## 🛠️ Supported Platforms
 
-单击想要输入的 prompt 即可。prompt 会添加在输入框之前。
+- ✅ ChatGPT (chat.openai.com, chatgpt.com)
+- ✅ Claude.ai (claude.ai)
+- ✅ Gemini (gemini.google.com)
 
-### 关闭 prompt 面板:
+## 🌐 Supported Browsers
 
-使用快捷键 `command+shift+F`, 或是按下 `ESC` 按键即可。或点击界面的任意位置即可关闭。
+- ✅ Chrome
+- ✅ Safari
+- ✅ Firefox
+- ✅ Edge
+- ✅ Any browser that supports Tampermonkey/Greasemonkey
 
-### 自定义 prompt:
+## 📝 Credits
 
-自行修改 `chatgpt_academic_helper.js` 文件中的内容即可。
+- Original project: [ZinYY/chatgpt-academic-prompt-helper](https://github.com/ZinYY/chatgpt-academic-prompt-helper)
+- Prompt templates inspired by: [ChatGPT Academic](https://github.com/binary-husky/chatgpt_academic)
+- Based on: [ChatGPT Prompt Scripts](https://github.com/winchesHe/chatGPT-prompt-scripts)
 
-## 赞助:
+## 📄 License
 
-如果你觉得脚本好用，可以请作者喝一杯咖啡：
-
-![sponsor](figs/pic_receive.jpg)
+MIT License
